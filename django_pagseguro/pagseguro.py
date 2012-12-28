@@ -8,58 +8,28 @@ import urllib
 import time
 
 
-class ItemPagSeguro(object):
+class PagSeguroItem(object):
     """
-    ItemPagSeguro é usado no CarrinhoPagSeguro para representar
-    cada Item de compra.
-
-    O frete e o valor são convertidos para formato exigido para o PagSeguro.
-    Regra do PagSeguro: valor real * 100.
-        Dinheiro     Decimal/Float       PagSeguro
-        R$ 1,50      1.50                150
-        R$ 32,53     32.53               3253
+    PagseguroItem is used by ShopCart to represent the Item.
     """
-    def __init__(self, cod, descr, quant, valor, frete=0, peso=0):
+    def __init__(self, id, description, amount, quantity, shipping_cost=0, weight=0):
         """
-        O parâmetro cod deve ser único por CarrinhoPagSeguro
+        The id param needs be unique by ShopCart.
 
-        Os parâmetros frete e peso são opcionais, os outros são
-        obrigatórios
+        The shipping_cost and weight param its optional.
         """
-        self.cod = cod
-        self.descr = descr
-        self.quant = quant
-        self._valor = valor
-        self._frete = frete
-        self.peso = peso
-
-    @property
-    def frete(self):
-        return int(self._frete * 100)
-
-    @property
-    def valor(self):
-        return int(self._valor * 100)
+        self.id = id
+        self.description = description
+        self.amount = amount
+        self.quantity = quantity
+        self.shipping_cost = shipping_cost
+        self.weight = weight
 
 
-class CarrinhoPagSeguro(object):
+
+class ShopCart(object):
     """
-    CarrinhoPagSeguro deve ser criado para gerar o Form para o PagSeguro.
-
-    As configurações do carrinho, cliente e itens do pedido são definidas
-    usando esta classe.
-
-    Os atributos de configuração geral do carrinho são feitas no atributo
-    self.config, os possíveis atributos podem ser encontrados na documentação
-    oficial do PagSeguro:
-        https://pagseguro.uol.com.br/desenvolvedor/carrinho_proprio.jhtml#rmcl
-
-    Configurações de clientes deve ser feita através do método set_cliente.
-
-    Para adicionar Items ao carrinho use método add_item.
-
-    Para obter o HTML do Form do PagSeguro com o botão de Comprar use
-    o método form.
+    
     """
     def __init__(self, **kwargs):
         """
@@ -79,45 +49,6 @@ class CarrinhoPagSeguro(object):
             'ref_transacao': '',
         }
         self.config.update(kwargs)
-
-    def set_cliente(self, **kwargs):
-        """
-        Define as configurações do cliente, essas informações são opcionais,
-        mas se tiver essa informações é interessante defini-las para facilitar
-        para o cliente no site do PagSeguro.
-
-        Os campos válidos são: nome, cep, end, num, compl, bairro, cidade, uf, pais,
-        ddd, tel, email
-
-        IMPORTANTE: Todos os valores devem ser passados como parâmetros nomeados.
-        """
-        campos_validos = ['nome', 'cep', 'end', 'num', 'compl',
-                          'bairro', 'cidade', 'uf', 'pais',
-                          'ddd', 'tel', 'email' ]
-        kwargs = dict((k, v) for k, v in kwargs.items() if k in campos_validos)
-        self.cliente.update(kwargs)
-
-    def add_item(self, item):
-        """
-        Adiciona um novo ItemPagSeguro ao carrinho.
-
-        Para mais informações consulte a documentação da classe ItemPagSeguro
-        """
-        self.itens.append(item)
-
-    def form(self, template='pagseguro_form.html'):
-        """
-        Realiza o render do formulário do PagSeguro baseado no template.
-
-        Por padrão o template usado é 'django_pagaseguro/templates/pagseguro_form.html',
-        porém é possível sobreescrever o template ou passar outro template que desejar
-        como parâmetro.
-        """
-        form_str = render_to_string(template, vars(self))
-        return form_str
-
-    def __repr__(self):
-        return "<CarrinhoPagSeguro - email:%s - %s itens>" % (self.config['email_cobranca'], len(self.itens))
 
 
 def _req_pagseguro(params):
